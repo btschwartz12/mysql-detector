@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>MySQL Version Detector</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.2/css/bulma.min.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+        <meta name="theme-color" content="#ffffff">
+        <style>
+            .dark-placeholder { color: rgba(255, 255, 255, 0.7); }
+            .light-placeholder { color: rgba(0, 0, 0, 0.7); }
+            input::placeholder { color: inherit; }
+            input, input:focus { background: transparent; border: none; outline: none; color: inherit; }
+        </style>
+    </head>
+    <script>
+        document.addEventListener('DOMContentLoaded', (_) => {
+            const input = document.getElementById('inputText');
+            document
+                .getElementById('inputForm')
+                .addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const val = input.value;
+                    if (val === '') {
+                        return;
+                    }
+                    const hero = document.getElementById('mainHero');
+                    const icon = document.getElementById('icon');
+                    var heroClass, iconClass, color, message;
+                    const form = new URLSearchParams();
+                    form.append(
+                        'q',
+                        input.value
+                    );
+                    fetch('api/scan?' + form.toString())
+                        .then(async (resp) => {
+                            
+                            if (resp.status === 429) {
+                                heroClass = 'is-warning';
+                                iconClass = 'fa-hand-paper';
+                                color = '#ffdd57';
+                                message = `Too many requests. Please try again later.`;
+                            } else if (resp.ok) {
+                                const data = await resp.json();
+                                heroClass = data.success ? 'is-success' : 'is-danger';
+                                iconClass = data.success ? 'fa-check' : 'fa-times';
+                                color = data.success ? '#48c774' : '#f14668';
+                                message = data.message;
+                            } else {
+                                throw resp.status;
+                            }
+                            hero.classList.remove('is-success', 'is-danger', 'is-warning');
+                            hero.classList.add(heroClass);
+                            icon.classList.remove('fa-question', 'fa-hand-paper', 'fa-check', 'fa-times');
+                            icon.classList.add(iconClass);
+                            input.classList.remove('dark-placeholder');
+                            input.classList.add('light-placeholder');
+                            document.querySelector('meta[name="theme-color"]').setAttribute("content", color);
+                            document.getElementById('results').classList.remove('is-invisible');
+                            document.getElementById('response').innerText = message;
+                            // append to inner text {{ .doc_url }} as a link
+                            //if (heroClass === 'is-success') {
+                            //    document.getElementById('response').innerHTML += '<br><a href="{{ .doc_url }}" target="_blank" class="has-text-weight-bold">What I'm looking for</a>';
+                            //}
+                        });
+                });
+        });
+    </script>
+
+    <body>
+    <section id="mainHero" class="hero is-fullheight">
+        <div class="hero-body" style="overflow: auto">
+            <div class="container">
+                <i id="icon" class="fas fa-question fa-10x mb-6"></i>
+                <p class="is-size-1 has-text-weight-bold mb-4" style="line-height: 1.1em;">
+                    Hey! Where do you want to sniff?
+                </p>
+                <p class="is-size-4 mb-5">
+                    Ben's MySQL Version Detector v1.0
+                </p>
+                <form id="inputForm">
+                    <input id="inputText" class="is-size-3 is-family-code mb-6 dark-placeholder" type="text"
+                        placeholder="example.com:3306" style="
+                            background: transparent;
+                            border: none;
+                            outline: none;
+                            width: 100%;
+                            color: inherit;
+                        " autofocus />
+                </form>
+                <p id="results" class="is-size-3 has-text-weight-bold mb-5 is-invisible" style="height: 1em">Response:</p>
+                <p id="response" class="is-size-3" style="height: 14em"></p>
+            </div>
+        </div>
+    </section>
+    </body>
+</html>
