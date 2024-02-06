@@ -21,9 +21,10 @@ type ApiResponse struct {
 	Message string `json:"message"`
 }
 
-func HomePageHandler(w http.ResponseWriter, r *http.Request) {
+func HomePageHandler(w http.ResponseWriter, r *http.Request, prefix string) {
 	tmpl.Execute(w, map[string]interface{}{
 		"doc_url": DocumentationURL,
+		"prefix":  prefix,
 	})
 }
 
@@ -100,8 +101,12 @@ func main() {
 			os.Exit(1)
 		}
 		fmt.Printf("MySQL server version: %s\n", version)
-	} else if len(os.Args) == 3 && os.Args[1] == "web" {
+	} else if (len(os.Args) == 3 || len(os.Args) == 4) && os.Args[1] == "web" {
 		port := os.Args[2]
+		prefix := ""
+		if len(os.Args) == 4 {
+			prefix = os.Args[3]
+		}
 		_, err := strconv.Atoi(port)
 		if err != nil {
 			fmt.Println("Invalid port:", port)
@@ -113,14 +118,20 @@ func main() {
 			os.Exit(1)
 		}
 		defer db.Close()
-		http.HandleFunc("/", HomePageHandler)
-		http.HandleFunc("/api/scan", func(w http.ResponseWriter, r *http.Request) {
+		http.HandleFunc("/"+prefix, func(w http.ResponseWriter, r *http.Request) {
+			HomePageHandler(w, r, prefix)
+		})
+		apiPrefix := "/api/scan"
+		if prefix != "" {
+			apiPrefix = "/" + prefix + apiPrefix
+		}
+		http.HandleFunc(apiPrefix, func(w http.ResponseWriter, r *http.Request) {
 			apiScanHandler(db, w, r)
 		})
-		fmt.Printf("Listening on port %s\n", port)
+		fmt.Printf("Listening on port %s with prefix /%s ...\n", port, prefix)
 		http.ListenAndServe(":"+port, nil)
 	} else {
-		fmt.Printf("Usage: %s [cli <host>]|[web] <port>\n", os.Args[0])
+		fmt.Printf("Usage: %s cli <host> <port> | %s web <listen-port> [url-prefix]\n", os.Args[0], os.Args[0])
 		os.Exit(1)
 	}
 }

@@ -31,7 +31,7 @@
                         'q',
                         input.value
                     );
-                    fetch('api/scan?' + form.toString())
+                    fetch('{{ .prefix }}/api/scan?' + form.toString())
                         .then(async (resp) => {
                             
                             if (resp.status === 429) {

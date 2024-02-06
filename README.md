@@ -25,13 +25,13 @@ go version go1.21.6 linux/amd64
 To run as a command-line tool:
 
 ```bash
-$ go run . cli [host] [port] # the host and port to scan
+$ go run . cli <host> <port> # the host and port to scan
 ```
 
 To run as a web server:
 
 ```bash
-$ go run . web [port] # the port to listen on
+$ go run . web <listen-port> [url-prefix]
 ```
 
 ## Testing
