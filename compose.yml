@@ -1,9 +1,13 @@
 services:
   server:
-    container_name: mysql-detector
     build: .
     volumes:
       - ./var:/app/var
-    command: ./mysql-detector web 8000 scanner
-    ports:
-      - ${MYSQLDETECTOR_SERVER_PORT}:8000
+    command: ./mysql-detector web 8000 
+
+  cloudflared:
+    restart: unless-stopped
+    image: cloudflare/cloudflared:latest
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
