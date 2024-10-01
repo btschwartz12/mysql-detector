@@ -1,0 +1,12 @@
+services:
+  mysql-detector:
+    build: .
+    volumes:
+      - ./var:/app/var
+    command: ./mysql-detector web 8000 
+    networks:
+      - site_network
+
+networks:
+  site_network:
+    external: true
